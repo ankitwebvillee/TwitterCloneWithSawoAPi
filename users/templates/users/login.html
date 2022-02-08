@@ -8,15 +8,27 @@
             <legend class="mb-3 white-important">
                 Login
             </legend>
-            {{ form | crispy }}
+            <!-- {{ form | crispy }} -->
+            <div class="main-container">
+                <div class="login-container">
+                  {% if load %}
+          
+                  <h1>Login Sucessfull payload received!</h1>
+          
+                  <p>{{load}}</p>
+                  {% else %}
+          
+                  <!-- <h1>Login</h1> -->
+                  {% include "partials/_sawo.html" %} {% endif %}
+                </div>
+              </div>
         </fieldset>
-        <div class="form-group">
+        <!-- <div class="form-group">
             <button class="btn btn-outline-primary" type="submit">Login</button>
-        </div>
+        </div> -->
     </form>
     <div class="pt-3">
         <small class="text-muted">
-            Do you need an account? <a class="ml-2" href="{% url 'register-users' %}">Sign up</a>
         </small>
     </div>
 </div>

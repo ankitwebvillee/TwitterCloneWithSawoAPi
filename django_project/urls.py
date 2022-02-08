@@ -22,8 +22,7 @@ from users import views as users_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/', auth_views.LoginView
-         .as_view(template_name='users/login.html'), name='login'),  # class based views (
+    path('login/', users_views.LoginView, name='login'),  # class based views (
     # without templates
     # tho)
     path('logout/', auth_views.LogoutView.as_view(template_name='users/logout.html'), name='logout'),
@@ -35,7 +34,7 @@ urlpatterns = [
     path('password-reset/confirm/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(
         template_name='users/password_reset_confirm.html'),
          name='password-reset-done'),
-    path('register/', users_views.register, name='register-users'),
+    # path('register/', users_views.register, name='register-users'),
     path('profile/', users_views.profile, name='profile'),
     path('search/', users_views.SearchView, name='search'),
     path('', include('blog.urls')),

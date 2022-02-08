@@ -5,17 +5,17 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
 
-def register(request):
-    if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
-        if form.is_valid():
-            form.save()
-            username = form.cleaned_data.get('username')
-            messages.success(request, f'Account created for {username}.')
-            return redirect('login')
-    else:
-        form = UserRegisterForm()
-    return render(request, 'users/register.html', {'form': form})
+# def register(request):
+#     if request.method == 'POST':
+#         form = UserRegisterForm(request.POST)
+#         if form.is_valid():
+#             form.save()
+#             username = form.cleaned_data.get('username')
+#             messages.success(request, f'Account created for {username}.')
+#             return redirect('login')
+#     else:
+#         form = UserRegisterForm()
+#     return render(request, 'users/register.html', {'form': form})
 
 
 @login_required
@@ -47,3 +47,54 @@ def SearchView(request):
             'results':results
         }
         return render(request, 'users/search_result.html', context)
+
+from django.http.response import HttpResponse
+from django.shortcuts import render
+from sawo import createTemplate, getContext, verifyToken
+import json
+
+load = ''
+loaded = 0
+
+
+def setPayload(payload):
+    global load
+    load = payload
+
+def setLoaded(reset=False):
+    global loaded
+    if reset:
+        loaded=0
+    else:
+        loaded+=1
+
+createTemplate("users/templates/partials")
+
+def index(request):
+    return render(request,"index.html")
+
+def LoginView(request):
+    setLoaded()
+    setPayload(load if loaded<2 else '')
+    # print(config('api_key'))
+    configuration = {
+                "auth_key": "cdd9093a-fad6-41a8-831b-b7f6520832d1",
+                "identifier": "phone_number_sms",
+                "to": "receive"
+    }
+    context = {"sawo":configuration,"load":load,"title":"Home"}
+    
+    return render(request,"users/login.html", context)
+
+def receive(request):
+    if request.method == 'POST':
+        payload = json.loads(request.body)["payload"]
+        setLoaded(True)
+        setPayload(payload)
+        print(payload)
+        
+        status = 200 if verifyToken(payload) else 404
+        print(status)
+        response_data = {"status":status}
+        return HttpResponse(json.dumps(response_data), content_type="application/json")
+
