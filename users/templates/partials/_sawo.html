@@ -1,7 +1,7 @@
 
     {% load static %}
     {% csrf_token %}
-    <div id="sawo-container" style="height: 300px; width: 300px;"></div>
+    <div id="sawo-container" style="height: 300px; width: 100%;"></div>
     <script src="https://websdk.sawolabs.com/sawo.min.js"></script>  
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script>
@@ -11,6 +11,7 @@
             identifierType: "{{sawo.identifier}}",
             apiKey: "{{sawo.auth_key}}",
             onSuccess: (payload) => {
+                localStorage.setItem('token', payload.verification_token)
                 axios({
                     method:"post",
                     url: "/{{sawo.to}}",
@@ -18,7 +19,7 @@
                     headers:{"X-CSRFToken":csrfToken}
                     })
                 .then((res)=>{
-                    location.reload()
+                    location.replace('/')
                 })
             },
         };

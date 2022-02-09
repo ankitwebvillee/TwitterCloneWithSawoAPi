@@ -14,7 +14,7 @@ from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.decorators import api_view
 from django.http.response import JsonResponse
-from rest_framework.parsers import JSONParser 
+from rest_framework.parsers import JSONParser
 from rest_framework import status
 
 
@@ -25,7 +25,7 @@ def is_users(post_user, logged_user):
 PAGINATION_COUNT = 3
 
 
-class PostListView(LoginRequiredMixin, ListView):
+class PostListView(ListView):
     model = Post
     template_name = 'blog/home.html'
     context_object_name = 'posts'
@@ -52,13 +52,13 @@ class PostListView(LoginRequiredMixin, ListView):
         print(all_users, file=sys.stderr)
         return data
 
-    def get_queryset(self):
-        user = self.request.user
-        qs = Follow.objects.filter(user=user)
-        follows = [user]
-        for obj in qs:
-            follows.append(obj.follow_user)
-        return Post.objects.filter(author__in=follows).order_by('-date_posted')
+    # def get_queryset(self):
+    #     user = self.request.user
+    #     qs = Follow.objects.filter(user=user)
+    #     follows = [user]
+    #     for obj in qs:
+    #         follows.append(obj.follow_user)
+    #     return Post.objects.filter(author__in=follows).order_by('-date_posted')
 
 
 class UserPostListView(LoginRequiredMixin, ListView):
@@ -96,12 +96,13 @@ class UserPostListView(LoginRequiredMixin, ListView):
                                                     follow_user=self.visible_user())
 
             if 'follow' in request.POST:
-                    new_relation = Follow(user=request.user, follow_user=self.visible_user())
-                    if follows_between.count() == 0:
-                        new_relation.save()
+                new_relation = Follow(
+                    user=request.user, follow_user=self.visible_user())
+                if follows_between.count() == 0:
+                    new_relation.save()
             elif 'unfollow' in request.POST:
-                    if follows_between.count() > 0:
-                        follows_between.delete()
+                if follows_between.count() > 0:
+                    follows_between.delete()
 
         return self.get(self, request, *args, **kwargs)
 
@@ -113,7 +114,8 @@ class PostDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
-        comments_connected = Comment.objects.filter(post_connected=self.get_object()).order_by('-date_posted')
+        comments_connected = Comment.objects.filter(
+            post_connected=self.get_object()).order_by('-date_posted')
         data['comments'] = comments_connected
         data['form'] = NewCommentForm(instance=self.request.user)
         return data
@@ -212,111 +214,99 @@ class FollowersListView(ListView):
 
 @login_required
 def postpreference(request, postid, userpreference):
-        
-        if request.method == "POST":
-                eachpost= get_object_or_404(Post, id=postid)
 
-                obj=''
+    if request.method == "POST":
+        eachpost = get_object_or_404(Post, id=postid)
 
-                valueobj=''
+        obj = ''
 
-                try:
-                        obj= Preference.objects.get(user= request.user, post= eachpost)
+        valueobj = ''
 
-                        valueobj= obj.value #value of userpreference
+        try:
+            obj = Preference.objects.get(user=request.user, post=eachpost)
 
+            valueobj = obj.value  # value of userpreference
 
-                        valueobj= int(valueobj)
+            valueobj = int(valueobj)
 
-                        userpreference= int(userpreference)
-                
-                        if valueobj != userpreference:
-                                obj.delete()
+            userpreference = int(userpreference)
 
+            if valueobj != userpreference:
+                obj.delete()
 
-                                upref= Preference()
-                                upref.user= request.user
+                upref = Preference()
+                upref.user = request.user
 
-                                upref.post= eachpost
+                upref.post = eachpost
 
-                                upref.value= userpreference
+                upref.value = userpreference
 
+                if userpreference == 1 and valueobj != 1:
+                    eachpost.likes += 1
+                    eachpost.dislikes -= 1
+                elif userpreference == 2 and valueobj != 2:
+                    eachpost.dislikes += 1
+                    eachpost.likes -= 1
 
-                                if userpreference == 1 and valueobj != 1:
-                                        eachpost.likes += 1
-                                        eachpost.dislikes -=1
-                                elif userpreference == 2 and valueobj != 2:
-                                        eachpost.dislikes += 1
-                                        eachpost.likes -= 1
-                                
+                upref.save()
 
-                                upref.save()
+                eachpost.save()
 
-                                eachpost.save()
-                        
-                        
-                                context= {'eachpost': eachpost,
-                                  'postid': postid}
-
-                                return redirect('blog-home')
-
-                        elif valueobj == userpreference:
-                                obj.delete()
-                        
-                                if userpreference == 1:
-                                        eachpost.likes -= 1
-                                elif userpreference == 2:
-                                        eachpost.dislikes -= 1
-
-                                eachpost.save()
-
-                                context= {'eachpost': eachpost,
-                                  'postid': postid}
-
-                                return redirect('blog-home')
-                                
-                        
-        
-                
-                except Preference.DoesNotExist:
-                        upref= Preference()
-
-                        upref.user= request.user
-
-                        upref.post= eachpost
-
-                        upref.value= userpreference
-
-                        userpreference= int(userpreference)
-
-                        if userpreference == 1:
-                                eachpost.likes += 1
-                        elif userpreference == 2:
-                                eachpost.dislikes +=1
-
-                        upref.save()
-
-                        eachpost.save()                            
-
-
-                        context= {'eachpost': eachpost,
-                          'postid': postid}
-
-                        return redirect('blog-home')
-
-
-        else:
-                eachpost= get_object_or_404(Post, id=postid)
-                context= {'eachpost': eachpost,
-                          'postid': postid}
+                context = {'eachpost': eachpost,
+                           'postid': postid}
 
                 return redirect('blog-home')
 
+            elif valueobj == userpreference:
+                obj.delete()
+
+                if userpreference == 1:
+                    eachpost.likes -= 1
+                elif userpreference == 2:
+                    eachpost.dislikes -= 1
+
+                eachpost.save()
+
+                context = {'eachpost': eachpost,
+                           'postid': postid}
+
+                return redirect('blog-home')
+
+        except Preference.DoesNotExist:
+            upref = Preference()
+
+            upref.user = request.user
+
+            upref.post = eachpost
+
+            upref.value = userpreference
+
+            userpreference = int(userpreference)
+
+            if userpreference == 1:
+                eachpost.likes += 1
+            elif userpreference == 2:
+                eachpost.dislikes += 1
+
+            upref.save()
+
+            eachpost.save()
+
+            context = {'eachpost': eachpost,
+                       'postid': postid}
+
+            return redirect('blog-home')
+
+    else:
+        eachpost = get_object_or_404(Post, id=postid)
+        context = {'eachpost': eachpost,
+                   'postid': postid}
+
+        return redirect('blog-home')
 
 
 def about(request):
-    return render(request,'blog/about.html',)
-
+    return render(request, 'blog/about.html',)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -337,29 +327,27 @@ class GroupViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 
-
 @api_view(['GET', 'POST', 'DELETE'])
 def post_list(request):
     if request.method == 'GET':
         posts = Post.objects.all()
-        
+
         title = request.query_params.get('title', None)
         if title is not None:
             posts = posts.filter(title__icontains=title)
-        
+
         posts_serializer = PostSerializer(posts, many=True)
         return JsonResponse(posts_serializer.data, safe=False)
         # 'safe=False' for objects serialization
- 
+
     elif request.method == 'POST':
         post_data = JSONParser().parse(request)
         post_serializer = PostSerializer(data=post_data)
         if post_serializer.is_valid():
             post_serializer.save()
-            return JsonResponse(post_serializer.data, status=status.HTTP_201_CREATED) 
+            return JsonResponse(post_serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(post_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     elif request.method == 'DELETE':
         count = Post.objects.all().delete()
         return JsonResponse({'message': '{} Posts were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
- 

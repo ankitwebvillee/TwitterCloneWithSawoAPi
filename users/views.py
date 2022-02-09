@@ -1,3 +1,6 @@
+from django.http.response import HttpResponse
+import json
+from sawo import createTemplate, getContext, verifyToken
 from django.shortcuts import render, redirect
 from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 from django.contrib import messages
@@ -22,7 +25,8 @@ from django.contrib.auth.models import User
 def profile(request):
     if request.method == 'POST':
         uform = UserUpdateForm(request.POST, instance=request.user)
-        pform = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
+        pform = ProfileUpdateForm(
+            request.POST, request.FILES, instance=request.user.profile)
 
         if uform.is_valid() and pform.is_valid():
             uform.save()
@@ -36,7 +40,6 @@ def profile(request):
     return render(request, 'users/profile.html', {'uform': uform, 'pform': pform})
 
 
-
 @login_required
 def SearchView(request):
     if request.method == 'POST':
@@ -44,14 +47,10 @@ def SearchView(request):
         print(kerko)
         results = User.objects.filter(username__contains=kerko)
         context = {
-            'results':results
+            'results': results
         }
         return render(request, 'users/search_result.html', context)
 
-from django.http.response import HttpResponse
-from django.shortcuts import render
-from sawo import createTemplate, getContext, verifyToken
-import json
 
 load = ''
 loaded = 0
@@ -61,30 +60,34 @@ def setPayload(payload):
     global load
     load = payload
 
+
 def setLoaded(reset=False):
     global loaded
     if reset:
-        loaded=0
+        loaded = 0
     else:
-        loaded+=1
+        loaded += 1
+
 
 createTemplate("users/templates/partials")
 
+
 def index(request):
-    return render(request,"index.html")
+    return render(request, "index.html")
+
 
 def LoginView(request):
     setLoaded()
-    setPayload(load if loaded<2 else '')
-    # print(config('api_key'))
+    setPayload(load if loaded < 2 else '')
     configuration = {
-                "auth_key": "cdd9093a-fad6-41a8-831b-b7f6520832d1",
-                "identifier": "phone_number_sms",
-                "to": "receive"
+        "auth_key": "cdd9093a-fad6-41a8-831b-b7f6520832d1",
+        "identifier": "email",
+        "to": "receive/"
     }
-    context = {"sawo":configuration,"load":load,"title":"Home"}
-    
-    return render(request,"users/login.html", context)
+    context = {"sawo": configuration, "load": load, "title": "Home"}
+
+    return render(request, "users/login.html", context)
+
 
 def receive(request):
     if request.method == 'POST':
@@ -92,9 +95,15 @@ def receive(request):
         setLoaded(True)
         setPayload(payload)
         print(payload)
-        
+
         status = 200 if verifyToken(payload) else 404
         print(status)
-        response_data = {"status":status}
-        return HttpResponse(json.dumps(response_data), content_type="application/json")
+        response_data = {"status": status}
+        # return HttpResponse(json.dumps(response_data), content_type="application/json")
+        request.session['payload'] = payload
+        return redirect('/')
 
+def LogoutView(request):
+    setPayload(None)
+    del request.session['payload']
+    return redirect('/login/')

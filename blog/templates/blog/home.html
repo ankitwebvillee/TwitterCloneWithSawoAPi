@@ -3,7 +3,7 @@
 {% block content %}
     <div class="row">
         <div class="col-12 col-md-3 pr-4 dont-move">
-            <a href="/"> <h2><img class="img-fluid" width="60" src="{% static 'blog/logo.png' %}">BlogRoom</h2></a><br>
+            <a href="/"> <h2><img class="img-fluid" width="60" src="{% static 'blog/logo.png' %}">Twitter</h2></a><br>
             <div class="profile-section">
             <h3 class="white-important p-2">
                 Profile
@@ -57,31 +57,31 @@
                     {%  if user_profile != None %}
                         <div class="col-6">
                             <h3 class="white-important follow-click">
-                                <a href="{% url 'user-followers' user_profile.username %}">
-                                    {{ user_profile.profile.followers }}
+                                <a>
+                                    2
                                 </a>
                             </h3>
                         </div>
                          <div class="col-6">
-                            <a href="{% url 'user-follows' user_profile.username %}">
+                            <a>
                                 <h3 class="white-important follow-click">
-                                    {{ user_profile.profile.following }}
+                                    3
                                 </h3>
                             </a>
                         </div>
                     {% else %}
                         <div class="col-6">
-                            <a href="{% url 'user-followers' user.username %}">
+                            <a>
                                 <h3 class="white-important follow-click">
-                                    {{ user.profile.followers }}
+                                    2
                                 </h3>
                             </a>
                         </div>
 
-                        <a href="{% url 'user-follows' user.username %}">
+                        <a>
                             <div class="col-6">
                                 <h3 class="white-important follow-click">
-                                    {{ user.profile.following }}
+                                    1
                                 </h3>
                             </div>
                         </a>
